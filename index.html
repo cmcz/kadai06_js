@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Tokyo Map For Foreigners</title>
+
+    <!-- Mapbox GL JS CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+
+    <!-- Add this new line for Mapbox Geocoder CSS -->
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/main.css">
+
+    <!-- Mapbox GL JS Script -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    
+    <!-- Add this new line for Mapbox Geocoder JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <!-- Add this new div for the search box -->
+    <div id="geocoder" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10"></div>
+
+    <!-- Modal -->
+    <div id="map-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div id="location-form" class="bg-white rounded-lg p-6 max-w-lg w-full max-h-full overflow-y-auto relative">
+            <!-- Cancel button updated to show only the X symbol -->
+            <button id="cancelButton" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h2 id="modal-title" class="text-3xl font-bold mb-6 text-gray-800">
+                <input id="location-name" class="w-full text-3xl font-bold text-gray-800 border-b border-gray-300 focus:outline-none focus:border-gray-500" type="text" value="Unknown" required placeholder="Enter the name of the place">
+            </h2>
+            
+            <form id="locationForm" class="space-y-4">
+                <!-- Form Fields -->
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <input type="text" id="address" name="address" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" required placeholder="Enter the full address">
+                </div>
+
+                <div class="flex space-x-2">
+                    <div class="w-1/2">
+                        <label for="lat" class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                        <input type="text" id="lat" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="e.g., 35.6895">
+                    </div>
+                    <div class="w-1/2">
+                        <label for="lon" class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                        <input type="text" id="lon" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="e.g., 139.6917">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="4" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" required placeholder="Provide a brief description of the location"></textarea>
+                </div>
+                <div>
+                    <label for="review" class="block text-sm font-medium text-gray-700 mb-1">Review</label>
+                    <textarea id="review" name="review" rows="4" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="Share your experience or review of this place"></textarea>
+                </div>
+
+                <div>
+                    <label for="photo" class="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
+                    <input type="text" id="photo" name="photo" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" value="1.png" placeholder="Enter the URL of a photo for this location">
+                </div>
+
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select id="category" name="category" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                        <option value="NA">Select a category</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Banks">Banks</option>
+                        <option value="Public Services">Public Services</option>
+                        <option value="Food">Food</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Beauty">Beauty</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Education">Education</option>
+                        <option value="Accommodation">Accommodation</option>
+                        <option value="Pet Care">Pet Care</option>
+                        <option value="Child Care">Child Care</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="website" class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                    <input type="url" id="website" name="website" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" value="http://example.com" placeholder="Enter the website URL">
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" id="send" class="bg-orange-500 text-white py-3 px-4 w-full rounded-md flex justify-center items-center space-x-2 hover:bg-orange-600 transition duration-300"> 
+                    <svg fill="#ffffff" height="24px" width="24px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M508.645,18.449c-2.929-2.704-7.133-3.51-10.826-2.085L6.715,204.446c-3.541,1.356-6.066,4.515-6.607,8.264 c-0.541,3.75,0.985,7.496,3.995,9.796l152.127,116.747c-0.004,0.116-0.575,0.224-0.575,0.342v83.592 c0,3.851,2.663,7.393,6.061,9.213c1.541,0.827,3.51,1.236,5.199,1.236c2.026,0,4.181-0.593,5.931-1.756l56.12-37.367 l130.369,99.669c1.848,1.413,4.099,2.149,6.365,2.149c1.087,0,2.186-0.169,3.248-0.516c3.27-1.066,5.811-3.672,6.786-6.974 L511.571,29.082C512.698,25.271,511.563,21.148,508.645,18.449z M170.506,321.508c-0.385,0.36-0.7,0.763-1.019,1.163 L31.659,217.272L456.525,54.557L170.506,321.508z M176.552,403.661v-48.454l33.852,25.887L176.552,403.661z M359.996,468.354 l-121.63-93.012c-1.263-1.77-2.975-3.029-4.883-3.733l-47.29-36.163L480.392,60.86L359.996,468.354z"></path> </g> </g> </g></svg>
+                    <span class="font-semibold">Submit</span>
+                </button> 
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map-container" class="h-screen">
+        <div id="map" class="w-full h-full"></div>
+    </div>
+
+    <!-- Category buttons container -->
+    <div id="category-buttons" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex flex-wrap justify-center gap-2 max-w-4xl w-full px-4">
+        <!-- Buttons will be dynamically added here -->
+    </div>
+
+    <!-- language -->
+    <select id="language-switcher">
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <!-- <option value="zh">Chinese</option>
+        <option value="vi">Vietnamese</option> -->
+        <option value="ko">Korean</option>
+    </select>
+
+      
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Main JS -->
+    <script type="module" src="js/firebaseConfig.js"></script>
+    <script type="module" src="./js/map.js"></script>
+
+</body>
+</html>
